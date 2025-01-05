@@ -1,5 +1,6 @@
-pandas
 numpy
-seaborn
-matplotlib
+pandas
+boto3
 scikit-learn
+matplotlib
+seaborn
