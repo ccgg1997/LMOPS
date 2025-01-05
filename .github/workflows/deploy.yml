@@ -53,7 +53,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python tests/test_pipeline.py
+          python QA/qa.py
         # Si esta etapa falla, GitHub Actions no continuará al despliegue.
 
       - name: Setup SSH
