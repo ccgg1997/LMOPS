@@ -3,7 +3,7 @@ name: Deploy to AWS Server
 on:
   push:
     branches:
-      - main # Ejecutar cuando haya un push en la rama principal
+      - main # Ejecutar PRUEBA
 
 jobs:
   deploy:
