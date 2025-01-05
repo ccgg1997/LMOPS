@@ -19,6 +19,7 @@ def test_pipeline():
 
     y_pred = regressor_qa.predict(X_test)
     print(f"Predicciones: {y_pred[0]}")
+    print(y_pred[0] == float(512587.9512686804))
     assert y_pred is not None and y_pred[0] == float(
         512587.9512686804
     ), "Predicciones incorrectas"
