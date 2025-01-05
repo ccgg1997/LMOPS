@@ -22,6 +22,5 @@ jobs:
       - name: Deploy to AWS
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@98.81.77.253 "
-            cd /path/to/your/project &&
             git pull origin main
           "
