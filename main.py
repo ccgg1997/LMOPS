@@ -69,13 +69,13 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=101)
 
 
-    # Verificar si el modelo ya existe
+    # Verificar si el mejor modelo ya existe
     model_filename = 'ml_model_regression.pkl'
 
     if check_model_exists_in_s3(model_filename, folder="bestModel"):
         print(f"Modelo {model_filename} en el bucket S3, no es necesario reentrenar")
-        return 0
-    # Si el modelo existe, cargarlo desde S3
+
+        # Si el modelo existe, carga desde S3
         s3_client = boto3.client('s3')
         bucket_name = 'datalomps'
         s3_client.download_file(bucket_name, f'bestModel/{model_filename}', model_filename)
@@ -88,21 +88,17 @@ def main():
 
     else:
         print(f"Modelo {model_filename} no encontrado en el bucket S3, entrenando un nuevo modelo")
-        
-    regressor = LinearRegression()
-    regressor.fit(X_train, y_train)
+        regressor_best = None
 
-        with open(model_filename, 'wb') as file:
-            pickle.dump(regressor, file)
 
-        print(f"Modelo {model_filename} entrenado y guardado localmente")
+    regressor_new = LinearRegression()
+    regressor_new.fit(X_train, y_train)
 
-        upload_model_to_s3(model_filename)
 
- 
+    #evaluar ambos modelos
+    y_pred_best = regressor_best.predict(X_test) if regressor_best else np.array([0] * len(y_test))
+    y_pred_new = regressor_new.predict(X_test)
 
-    #predicting the test set result
-    y_pred = regressor.predict(X_test)
 
 
     #compare actual output values with predicted values
@@ -111,11 +107,43 @@ def main():
     print(df1)
 
 
-    #EVALUACIÓN DEL RENDIMIENTO
-    print('MAE:', metrics.mean_absolute_error(y_test, y_pred))
-    print('MSE:', metrics.mean_squared_error(y_test, y_pred))
-    print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-    print('VarScore:', metrics.explained_variance_score(y_test, y_pred))
+    #EVALUACIÓN DEL RENDIMIENTO bestmodel
+    print("Evaluación del modelo mejor (bestmodel):")
+    mae_best = metrics.mean_absolute_error(y_test, y_pred_best)
+    mse_best = metrics.mean_squared_error(y_test, y_pred_best)
+    rmse_best = np.sqrt(mse_best)
+    print(f"MAE: {mae_best}, MSE: {mse_best}, RMSE: {rmse_best}")
+
+    print("Evaluación del modelo nuevo:")
+    mae_new = metrics.mean_absolute_error(y_test, y_pred_new)
+    mse_new = metrics.mean_squared_error(y_test, y_pred_new)
+    rmse_new = np.sqrt(mse_new)
+    print(f"MAE: {mae_new}, MSE: {mse_new}, RMSE: {rmse_new}")
+
+    if rmse_new < rmse_best:
+        print("El nuevo modelo es mejor. Subiendo a S3 como 'bestmodel' y haciendo backup del anterior...")
+        
+        # Guardar el modelo nuevo como "bestmodel"
+        with open(model_filename, 'wb') as file:
+            pickle.dump(regressor_new, file)
+
+        # Subir el nuevo modelo a S3 como "bestmodel"
+        upload_model_to_s3(model_filename, folder="bestmodel")
+        
+        # Hacer un backup del modelo anterior si existía
+        if regressor_best:
+            backup_filename = f'backup_models/{model_filename}'
+            upload_model_to_s3(model_filename, folder="backup_models")
+        
+    else:
+        print("El modelo anterior es mejor. No se realiza ningún cambio.")
+
+
+
+    #print('MAE:', metrics.mean_absolute_error(y_test, y_pred))
+    #print('MSE:', metrics.mean_squared_error(y_test, y_pred))
+    #print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+    #print('VarScore:', metrics.explained_variance_score(y_test, y_pred))
 
 if __name__ == '__main__':
     main()
