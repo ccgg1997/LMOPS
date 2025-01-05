@@ -8,7 +8,7 @@ from pipeline.etl import split_data
 from pipeline.model_build import train_and_save_model
 
 
-def main():
+def test_pipeline():
     local_file_path = "kc_house_data_qa.csv"
     model_filename = "ml_model_regression_qa.pkl"
 
@@ -18,8 +18,16 @@ def main():
     regressor_qa.fit(X_train, y_train)
 
     y_pred = regressor_qa.predict(X_test)
-    print(f"Predicciones:{y_pred}")
+    assert y_pred is not None and y_pred[0] == float(
+        512587.9512686804
+    ), "Predicciones incorrectas"
+
+    # Eliminar el archivo del modelo
+    if os.path.exists(model_filename):
+        os.remove(model_filename)
+
+    print("Prueba completada exitosamente")
 
 
 if __name__ == "__main__":
-    main()
+    test_pipeline()

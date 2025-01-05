@@ -2,6 +2,4 @@ numpy
 pandas
 boto3
 scikit-learn
-matplotlib
-seaborn
 streamlit
