@@ -120,10 +120,6 @@ def main():
         print("El modelo anterior es mejor. No se realiza ningún cambio.")
 
 
-
-if __name__ == '__main__':
-    main()
-
 def check_model_exists_in_s3(model_filename):
     s3_client = boto3.client('s3')
     bucket_name = 'datalomps'
@@ -154,3 +150,7 @@ def evaluate_model(y_test, y_pred):
     mse = metrics.mean_squared_error(y_test, y_pred)
     rmse = np.sqrt(mse)
     return mae, mse, rmse
+
+
+if __name__ == '__main__':
+    main()
