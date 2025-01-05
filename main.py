@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn import metrics
 from datetime import datetime
+import os
 
 
 
@@ -19,7 +20,7 @@ def download_recent_data_file(local_file_path):
     bucket_name = 'datamlops'
 
     #listar los archivos de un bucket
-    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix= 'data/')
     print(f"Archivos en el bucket: {response}")
 
     #ordenar los archivos por fecha, y solo sacar el nombre del archivo mas reciente
@@ -71,21 +72,34 @@ def main():
     # Verificar si el modelo ya existe
     model_filename = 'ml_model_regression.pkl'
 
-    try:
-        # Intentar cargar el modelo entrenado previamente
+    if check_model_exists_in_s3(model_filename, folder="bestModel"):
+        print(f"Modelo {model_filename} en el bucket S3, no es necesario reentrenar")
+        return 0
+    # Si el modelo existe, cargarlo desde S3
+        s3_client = boto3.client('s3')
+        bucket_name = 'datalomps'
+        s3_client.download_file(bucket_name, f'bestModel/{model_filename}', model_filename)
+        
+        
         with open(model_filename, 'rb') as file:
-            regressor = pickle.load(file)
-            print("Modelo cargado desde el archivo")
-    except FileNotFoundError:
-        # Si el modelo no existe, entrenar uno nuevo
-        print("Modelo no encontrado, entrenando un nuevo modelo")
-        regressor = LinearRegression()
-        regressor.fit(X_train, y_train)
+            regressor_best = pickle.load(file)
 
-        # Guardar el modelo entrenado
+        print(f"Modelo {model_filename} cargado desde S3 (bestmodel)")
+
+    else:
+        print(f"Modelo {model_filename} no encontrado en el bucket S3, entrenando un nuevo modelo")
+        
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+
         with open(model_filename, 'wb') as file:
             pickle.dump(regressor, file)
-        print("Modelo entrenado y guardado")
+
+        print(f"Modelo {model_filename} entrenado y guardado localmente")
+
+        upload_model_to_s3(model_filename)
+
+ 
 
     #predicting the test set result
     y_pred = regressor.predict(X_test)
@@ -105,3 +119,29 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+def check_model_exists_in_s3(model_filename):
+    s3_client = boto3.client('s3')
+    bucket_name = 'datalomps'
+    model_key = f'model/{model_filename}'
+
+    try:
+        # Verificar si el modelo existe en el bucket S3
+        s3_client.head_object(Bucket=bucket_name, Key=model_key)
+        return True
+    except Exception as e:
+        return False
+
+def upload_model_to_s3(model_filename):
+    s3_client = boto3.client('s3')
+    bucket_name = 'datamlops'
+    model_key = f'model/{model_filename}'
+
+    try:
+        # Subir el modelo entrenado al bucket S3
+        s3_client.upload_file(model_filename, bucket_name, model_key)
+        print(f"Modelo {model_filename} subido exitosamente a S3 en la carpeta 'model/'")
+    except Exception as e:
+        print(f"Error al subir el modelo a S3: {str(e)}")
+
+
