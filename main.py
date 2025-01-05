@@ -1,10 +1,11 @@
 from pipeline.etl import download_and_preprocess_data
 from pipeline.model_build import train_and_save_model
 from pipeline.model_predict import evaluate_and_compare_models
+from datetime import datetime
 
 def main():
     local_file_path = 'data/kc_house_data.csv'
-    model_filename = 'model/ml_model_regression.pkl'
+    model_filename = 'ml_model_regression.pkl'
     bucket_name = 'datamlops'
 
     # Paso 1: Descargar y procesar datos

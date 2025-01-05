@@ -29,28 +29,62 @@ def download_model_from_s3(model_filename, bucket_name, folder="model/bestModel"
 
 def evaluate_and_compare_models(regressor_new, X_test, y_test, model_filename, bucket_name):
     regressor_best = None
-    if check_model_exists_in_s3(model_filename, bucket_name, folder="model/bestModel"):
-        regressor_best = download_model_from_s3(model_filename, bucket_name, folder="model/bestModel")
+    source_folder = "model/bestModel"
+    backup_folder = "model/backup_models"
 
+    # Verificar si ya existe un mejor modelo en S3
+    if check_model_exists_in_s3(model_filename, bucket_name, folder=source_folder):
+        regressor_best = download_model_from_s3(model_filename, bucket_name, folder=source_folder)
+
+    # Realizar predicciones
     y_pred_best = regressor_best.predict(X_test) if regressor_best else np.zeros(len(y_test))
     y_pred_new = regressor_new.predict(X_test)
 
+    # Evaluar modelos
     mae_best, mse_best, rmse_best = evaluate_model(y_test, y_pred_best)
     mae_new, mse_new, rmse_new = evaluate_model(y_test, y_pred_new)
 
     print(f"Mejor modelo: MAE={mae_best}, MSE={mse_best}, RMSE={rmse_best}")
     print(f"Nuevo modelo: MAE={mae_new}, MSE={mse_new}, RMSE={rmse_new}")
 
+    # Comparar modelos
     if rmse_new < rmse_best:
-        print("El nuevo modelo es mejor. Subiendo a S3...")
+        print("El nuevo modelo es mejor. Actualizando S3...")
+
+        # Mover el modelo anterior a la carpeta de respaldo si existe
+        if regressor_best:
+            move_model_to_backup(model_filename, bucket_name, source_folder, backup_folder)
+
+        # Guardar el nuevo modelo localmente
         with open(model_filename, 'wb') as file:
             pickle.dump(regressor_new, file)
-        upload_model_to_s3(model_filename, bucket_name, folder="model/bestModel")
+
+        # Subir el nuevo modelo a S3 como el mejor modelo
+        upload_model_to_s3(model_filename, bucket_name, folder=source_folder)
     else:
-        print("El modelo anterior es mejor. No se realiza ningún cambio.")
+        print("El modelo anterior sigue siendo el mejor. No se realiza ningún cambio.")
 
 def upload_model_to_s3(model_filename, bucket_name, folder="model/bestModel"):
     s3_client = boto3.client('s3')
     model_key = f'{folder}/{model_filename}'
     s3_client.upload_file(model_filename, bucket_name, model_key)
     print(f"Modelo {model_filename} subido exitosamente a S3 en '{folder}'.")
+
+def move_model_to_backup(model_filename, bucket_name, source_folder, backup_folder):
+    s3_client = boto3.client('s3')
+
+    # Define las claves del modelo en el bucket
+    source_key = f'{source_folder}/{model_filename}'
+    backup_key = f'{backup_folder}/{model_filename}'
+
+    try:
+        # Copiar el modelo a la carpeta de respaldo
+        copy_source = {'Bucket': bucket_name, 'Key': source_key}
+        s3_client.copy_object(CopySource=copy_source, Bucket=bucket_name, Key=backup_key)
+        print(f"Modelo copiado a la carpeta de respaldo: {backup_folder}")
+
+        # Eliminar el modelo de la carpeta original
+        s3_client.delete_object(Bucket=bucket_name, Key=source_key)
+        print(f"Modelo eliminado de la carpeta original: {source_folder}")
+    except Exception as e:
+        print(f"Error al mover el modelo a la carpeta de respaldo: {e}")
