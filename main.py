@@ -30,7 +30,7 @@ def main():
 
 
     ##3:  Verificar si el mejor modelo ya existe
-    if check_model_exists_in_s3(model_filename, folder="model/bestmodel"):
+    if check_model_exists_in_s3(model_filename, folder="model/bestModel"):
         s3_client = boto3.client('s3')
         bucket_name = 'datamlops'
         s3_client.download_file(bucket_name, f'bestmodel/{model_filename}', model_filename)
@@ -63,7 +63,7 @@ def main():
             pickle.dump(regressor_new, file)
 
         # Subir el nuevo modelo a S3 como "bestmodel"
-        upload_model_to_s3(model_filename, folder="model/bestmodel")
+        upload_model_to_s3(model_filename, folder="model/bestModel")
         
         # Hacer un backup del modelo anterior si existía
         if regressor_best:
@@ -78,7 +78,7 @@ def main():
 if __name__ == '__main__':
     main()
 
-def check_model_exists_in_s3(model_filename, folder="model/bestmodel" ):
+def check_model_exists_in_s3(model_filename, folder="model/bestModel" ):
     s3_client = boto3.client('s3')
     bucket_name = 'datalomps'
     model_key = f'{folder}/{model_filename}'
@@ -91,7 +91,7 @@ def check_model_exists_in_s3(model_filename, folder="model/bestmodel" ):
         print(f"Error al verificar el modelo en S3: {e}")
         return False
 
-def upload_model_to_s3(model_filename, folder="model/bestmodel"):
+def upload_model_to_s3(model_filename, folder="model/bestModel"):
     s3_client = boto3.client('s3')
     bucket_name = 'datamlops'
     model_key = f'{folder}/{model_filename}'
