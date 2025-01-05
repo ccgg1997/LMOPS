@@ -1,0 +1,27 @@
+name: Deploy to AWS Server
+
+on:
+  push:
+    branches:
+      - main # Ejecutar cuando haya un push en la rama principal
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy to AWS
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@98.81.77.253 "
+            cd /path/to/your/project &&
+            git pull origin main
+          "
