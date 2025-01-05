@@ -46,9 +46,28 @@ print(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=101)
 
 
+# Verificar si el modelo ya existe
+model_filename = 'ml_model_regression.pkl'
+
+try:
+    # Intentar cargar el modelo entrenado previamente
+    with open(model_filename, 'rb') as file:
+        regressor = pickle.load(file)
+        print("Modelo cargado desde el archivo")
+except FileNotFoundError:
+    # Si el modelo no existe, entrenar uno nuevo
+    print("Modelo no encontrado, entrenando un nuevo modelo")
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+
+    # Guardar el modelo entrenado
+    with open(model_filename, 'wb') as file:
+        pickle.dump(regressor, file)
+    print("Modelo entrenado y guardado")
+
 # Multiple Liner Regression
-regressor = LinearRegression()
-regressor.fit(X_train, y_train)
+#regressor = LinearRegression()
+#regressor.fit(X_train, y_train)
 
 #predicting the test set result
 y_pred = regressor.predict(X_test)
