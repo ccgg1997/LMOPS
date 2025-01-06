@@ -1,6 +1,5 @@
 # app.py
 
-import os
 
 import joblib
 import pandas as pd
@@ -17,7 +16,7 @@ def cargar_modelo(modelo_path="../model/ml_model_regression.pkl"):
 
 
 # Cargar el modelo existente
-modelo = cargar_modelo()
+modelo = cargar_modelo(modelo_path='../model/ml_model_regression.pkl')
 
 st.title("Predicción de Precios de Casas (MLOPS)")
 
@@ -132,43 +131,13 @@ with tab2:
 
     if archivo is not None:
         try:
-            df = pd.read_csv(archivo)
 
-            # Verificar columnas necesarias
-            columnas_necesarias = [
-                "date",
-                "bedrooms",
-                "bathrooms",
-                "sqft_living",
-                "sqft_lot",
-                "floors",
-                "waterfront",
-                "view",
-                "condition",
-                "grade",
-                "sqft_above",
-                "sqft_basement",
-                "yr_built",
-                "yr_renovated",
-                "lat",
-                "long",
-                "sqft_living15",
-                "sqft_lot15",
-            ]
-            if all(col in df.columns for col in columnas_necesarias):
-                st.write("Vista previa de los datos cargados:")
-                st.dataframe(df.head())
-
-                if st.button("Entrenar y Guardar Modelo"):
-                    st.spinner("Entrenando el modelo...")
-                    st.info("Función de entrenamiento pendiente de integración.")
-
-            else:
-                st.error(
-                    f"El archivo debe contener las columnas: {', '.join(columnas_necesarias)}"
-                )
-        except Exception as e:
             st.error(f"Ocurrió un error al procesar el archivo: {e}")
+        except Exception as e:
+            st.error(f"Ocurrió un error inesperado: {e}")
 
     else:
         st.info("Por favor, sube un archivo CSV para comenzar.")
+
+
+
