@@ -75,5 +75,5 @@ jobs:
             git pull origin main &&
             source .venv/bin/activate &&
             cd front &&
-            sudo streamlit run front.py --server.port 80
+            streamlit run front.py --server.port 80
             "
