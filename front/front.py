@@ -3,6 +3,8 @@
 import os
 import sys
 
+from cd_pipe import cd_deploy
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from datetime import datetime
 
@@ -25,7 +27,7 @@ def cargar_modelo(modelo_path="../model/ml_model_regression.pkl"):
 
 
 # Cargar el modelo existente
-modelo = cargar_modelo(modelo_path="../model/ml_model_regression.pkl")
+modelo = cargar_modelo(modelo_path="model/ml_model_regression.pkl")
 
 st.title("Predicción de Precios de Casas (MLOPS3)")
 
@@ -177,88 +179,9 @@ with tab2:
                     # Verificación antes de limpiar los datos
                     st.write(f"Filas originales: {len(df)}")
 
-                    # Limpiar los datos eliminando filas con valores NaN en las columnas críticas
-                    df_before_drop = (
-                        df.copy()
-                    )  # Copia antes de la limpieza para comparación
-                    df = df.dropna(subset=columnas_necesarias)
-                    st.write(f"Filas después de eliminar filas con NaN: {len(df)}")
-
-                    # Mostrar filas eliminadas
-                    filas_eliminadas = df_before_drop[
-                        ~df_before_drop.index.isin(df.index)
-                    ]
-                    if not filas_eliminadas.empty:
-                        st.write("Filas eliminadas debido a NaN:")
-                        st.dataframe(filas_eliminadas)
-
-                    # Intentar convertir las columnas a tipo numérico (si no puede, se convierte a NaN)
-                    for col in columnas_necesarias:
-                        df[col] = pd.to_numeric(df[col], errors="coerce")
-
-                    # Mostrar filas donde se produjo un NaN por conversión a numérico
-                    filas_invalidas = df[df[columnas_necesarias].isna().any(axis=1)]
-                    if not filas_invalidas.empty:
-                        st.write("Filas con datos no numéricos convertidos a NaN:")
-                        st.dataframe(filas_invalidas)
-
-                    # Eliminar las filas con NaN generados por la conversión
-                    df = df.dropna(subset=columnas_necesarias)
-                    st.write(
-                        f"Filas después de eliminar filas con NaN por conversión: {len(df)}"
-                    )
-
-                    # Limpiar y convertir la columna 'date' a datetime con el formato correcto
-                    # Asegurarse de que la columna 'date' es tipo cadena antes de reemplazar 'T'
-                    df["date"] = df["date"].astype(
-                        str
-                    )  # Asegurarse de que 'date' es tipo string
-                    df["date"] = df["date"].str.replace("T", "", regex=False)
-
-                    # Ahora, convertir la fecha usando el formato adecuado
-                    df["date"] = pd.to_datetime(
-                        df["date"], format="%Y%m%d%H%M%S", errors="coerce"
-                    )
-
-                    # Mostrar las filas eliminadas debido a fechas no válidas
-                    if not df_before_drop[df_before_drop["date"].isna()].empty:
-                        st.write("Filas con fechas no válidas eliminadas:")
-                        st.dataframe(df_before_drop[df_before_drop["date"].isna()])
-
-                    # Si el DataFrame está vacío después de la limpieza, mostrar un error
-                    if df.empty:
-                        st.error(
-                            "Después de limpiar los datos, no quedan filas válidas para entrenar el modelo."
-                        )
-                    else:
-                        # Separar la columna 'price' como la variable objetivo (y) y las demás como características (X)
-                        X = df.drop(columns=["price"])
-                        y = df["price"]
-
-                        # Convertir todas las columnas de X a tipo numérico
-                        X = X.apply(pd.to_numeric, errors="coerce")
-
-                        if st.button("Entrenar y Guardar Modelo"):
-                            st.spinner("Entrenando el modelo...")
-                            # Usar el archivo CSV cargado para separar los datos
-                            X_train, X_test, y_train, y_test = split_data(archivo)
-
-                            # Guardar el modelo entrenado
-                            model_filename = "ml_model_regression.pkl"
-                            regressor_new = train_and_save_model(
-                                X_train, y_train, model_filename
-                            )
-
-                            # Evaluar y comparar el nuevo modelo
-                            bucket_name = "datamlops"
-                            evaluate_and_compare_models(
-                                regressor_new,
-                                X_test,
-                                y_test,
-                                model_filename,
-                                bucket_name,
-                            )
-                            st.success("Modelo entrenado y actualizado correctamente.")
+                    if st.button("Entrenar y Guardar Modelo"):
+                        cd_deploy()
+                        st.success("Modelo entrenado y actualizado correctamente.")
                 else:
                     st.error(
                         f"El archivo debe contener las columnas: {', '.join(columnas_necesarias)}"
