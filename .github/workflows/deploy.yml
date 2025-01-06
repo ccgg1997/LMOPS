@@ -76,7 +76,6 @@ jobs:
                 source .venv/bin/activate &&
                 cd front &&
                 sudo fuser -k 80/tcp || true &&
-                nohup streamlit run front.py --server.port 80 > streamlit.log 2>&1 < /dev/null &
-                exit 0
+                (nohup streamlit run front.py --server.port 80 > streamlit.log 2>&1 & exit 0)
             '
             "
