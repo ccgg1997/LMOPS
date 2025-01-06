@@ -112,6 +112,7 @@ with tab2:
                 if st.button("Entrenar y Guardar Modelo"):
                     st.spinner("Entrenando el modelo...")
                     st.info("Función de entrenamiento pendiente de integración.")
+                    
             else:
                 st.error(f"El archivo debe contener las columnas: {', '.join(columnas_necesarias)}")
         except Exception as e:
