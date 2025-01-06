@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 from sklearn import metrics
 import boto3
+from datetime import datetime
 
 def evaluate_model(y_test, y_pred):
     mae = metrics.mean_absolute_error(y_test, y_pred)
@@ -75,13 +76,18 @@ def move_model_to_backup(model_filename, bucket_name, source_folder, backup_fold
 
     # Define las claves del modelo en el bucket
     source_key = f'{source_folder}/{model_filename}'
-    backup_key = f'{backup_folder}/{model_filename}'
+    #backup_key = f'{backup_folder}/{model_filename}'
+
+    # Añadir fecha y hora al modelo de respaldo
+    current_time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+    backup_filename_with_date = f"{current_time}_{model_filename}"
+    backup_key = f'{backup_folder}/{backup_filename_with_date}'
 
     try:
         # Copiar el modelo a la carpeta de respaldo
         copy_source = {'Bucket': bucket_name, 'Key': source_key}
         s3_client.copy_object(CopySource=copy_source, Bucket=bucket_name, Key=backup_key)
-        print(f"Modelo copiado a la carpeta de respaldo: {backup_folder}")
+        print(f"Modelo copiado a la carpeta de respaldo: {backup_key}")
 
         # Eliminar el modelo de la carpeta original
         s3_client.delete_object(Bucket=bucket_name, Key=source_key)
