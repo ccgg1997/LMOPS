@@ -70,9 +70,9 @@ jobs:
         if: success() # Solo se ejecutará si la etapa de prueba pasa
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@98.81.77.253 "
+            sudo su &&
             cd LMOPS &&
             git pull origin main &&
-            sudo su &&
             source .venv/bin/activate &&
             cd front &&
             sudo streamlit run front.py --server.port 80
