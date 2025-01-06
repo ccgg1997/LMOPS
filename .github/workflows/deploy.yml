@@ -75,6 +75,7 @@ jobs:
                 git pull origin main &&
                 source .venv/bin/activate &&
                 cd front &&
-                streamlit run front.py --server.port 80
+                sudo fuser -k 80/tcp || true &&
+                nohup streamlit run front.py --server.port 80
             '
             "
