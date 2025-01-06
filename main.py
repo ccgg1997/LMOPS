@@ -6,7 +6,6 @@ from pipeline.model_predict import evaluate_and_compare_models
 def cd_pipeline():
     local_file_path = "data/kc_house_data.csv"
     model_filename_local = "ml_model_regression.pkl"
-    model_filename_s3 = "ml_model_regression_s3.pkl"
     bucket_name = "datamlops"
 
     # Paso 1: Descargar y procesar datos
