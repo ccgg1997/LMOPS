@@ -29,7 +29,7 @@ def cargar_modelo(modelo_path="../model/ml_model_regression.pkl"):
 # Cargar el modelo existente
 modelo = cargar_modelo(modelo_path="model/ml_model_regression.pkl")
 
-st.title("Predicción de Precios de Casas (MLOPS3)")
+st.title("Predicción de Precios de Casas (MLOPS)")
 
 # Crear pestañas
 tab1, tab2 = st.tabs(["🔮 Predecir Precio", "📈 Actualizar Modelo"])
