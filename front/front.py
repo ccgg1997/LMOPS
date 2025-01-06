@@ -8,6 +8,7 @@ from cd_pipe import cd_deploy
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from datetime import datetime
 
+import boto3
 import joblib
 import pandas as pd
 import streamlit as st
@@ -180,7 +181,22 @@ with tab2:
                     st.write(f"Filas originales: {len(df)}")
 
                     if st.button("Entrenar y Guardar Modelo"):
+                        if archivo is None:
+                            st.error("Por favor, sube un archivo CSV.")
+
+                        archivo_nombre = archivo.name
+                        ruta_local = f"./data/{archivo_nombre}"
+
+                        with open(ruta_local, "wb") as f:
+                            f.write(archivo.getbuffer())
+
+                        # subir archivos a s3
+                        s3_client = boto3.client("s3")
+                        model_key = f"data/{archivo_nombre}"
+                        s3_client.upload_file(ruta_local, "datamlops", model_key)
+
                         cd_deploy()
+
                         st.success("Modelo entrenado y actualizado correctamente.")
                 else:
                     st.error(

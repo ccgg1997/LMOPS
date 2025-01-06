@@ -47,3 +47,10 @@ def download_and_preprocess_data(local_file_path, bucket_name):
 def split_data(local_file_path):
     X, y = preprocess_data(local_file_path)
     return train_test_split(X, y, test_size=0.33, random_state=101)
+
+
+def upload_data_to_s3(data_filename, bucket_name, folder="data"):
+    s3_client = boto3.client("s3")
+    model_key = f"data/{data_filename}"
+    s3_client.upload_file(data_filename, bucket_name, model_key)
+    print(f"Modelo {data_filename} subido exitosamente a S3 en '{folder}'.")

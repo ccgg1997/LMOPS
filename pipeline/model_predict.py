@@ -90,6 +90,13 @@ def upload_model_to_s3(model_filename, bucket_name, folder="model/bestModel"):
     print(f"Modelo {model_filename} subido exitosamente a S3 en '{folder}'.")
 
 
+def upload_data_to_s3(data_filename, bucket_name, folder="model/bestModel"):
+    s3_client = boto3.client("s3")
+    model_key = f"data/{data_filename}"
+    s3_client.upload_file(data_filename, bucket_name, model_key)
+    print(f"Modelo {data_filename} subido exitosamente a S3 en '{folder}'.")
+
+
 def move_model_to_backup(model_filename, bucket_name, source_folder, backup_folder):
     s3_client = boto3.client("s3")
 

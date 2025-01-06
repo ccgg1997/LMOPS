@@ -73,20 +73,24 @@ def evaluate_and_compare_models(
                 model_filename, bucket_name, source_folder, backup_folder
             )
 
+        print("@" * 2)
         # Guardar el nuevo modelo localmente
         with open(f"model/{model_filename}", "wb") as file:
             pickle.dump(regressor_new, file)
-
+        print("@" * 3)
         # Subir el nuevo modelo a S3 como el mejor modelo
-        upload_model_to_s3(model_filename, bucket_name, folder=source_folder)
+        upload_model_to_s3(f"{model_filename}", bucket_name, folder=source_folder)
+        print("@" * 4)
     else:
         print("El modelo anterior sigue siendo el mejor. No se realiza ningún cambio.")
 
 
 def upload_model_to_s3(model_filename, bucket_name, folder="model/bestModel"):
     s3_client = boto3.client("s3")
-    model_key = f"{folder}/{model_filename}"
-    s3_client.upload_file(model_filename, bucket_name, model_key)
+    # model_key = f"{model_filename}"
+    s3_client.upload_file(
+        f"model/{model_filename}", bucket_name, f"{folder}/{model_filename}"
+    )
     print(f"Modelo {model_filename} subido exitosamente a S3 en '{folder}'.")
 
 
